@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get your number</title>
+<meta name="description" content="A simple tool that hands out a unique number that is never repeated.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#004238; --lime:#AADB1E; --green:#00AD50;
+    --ink:#243029; --ink-soft:#5b6770; --paper:#ffffff;
+    --paper-warm:#FAFAF7; --tint:#EEF3F1; --line:#E4E9E7;
+    --amber:#9a6b00; --amber-bg:#fff4d6;
+    --sans:"Inter",-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    --display:"Space Grotesk",var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:var(--sans); color:var(--ink); background:var(--paper-warm);
+    display:flex; align-items:center; justify-content:center; padding:1.5rem; min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .card{
+    background:var(--paper); width:100%; max-width:440px; border-radius:24px;
+    border:1px solid var(--line); box-shadow:0 18px 50px -24px rgba(0,66,56,.28);
+    padding:2.6rem 2.2rem 2.2rem; text-align:center; overflow:hidden;
+  }
+  .demobar{
+    margin:-2.6rem -2.2rem 2rem; padding:.7rem 1rem; background:var(--amber-bg);
+    color:var(--amber); font-size:.8rem; font-weight:600; line-height:1.4;
+  }
+  .brand{font-size:.72rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--forest); margin-bottom:.35rem;}
+  .brand span{color:var(--ink-soft); font-weight:600;}
+  h1{font-family:var(--display); font-weight:600; font-size:1.5rem; line-height:1.2; color:var(--forest); margin:.2rem 0 .4rem;}
+  .sub{color:var(--ink-soft); font-size:.96rem; margin:0 0 2rem;}
+
+  .stage{min-height:188px; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .number{
+    font-family:var(--display); font-weight:700; font-variant-numeric:tabular-nums;
+    font-size:clamp(4.2rem,22vw,6rem); line-height:1; color:var(--forest); letter-spacing:-.01em;
+    opacity:0; transform:translateY(8px) scale(.96);
+    transition:opacity .35s ease, transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .number.show{opacity:1; transform:none;}
+  .reserved{margin-top:1rem; font-size:.95rem; color:var(--ink); opacity:0; transition:opacity .3s ease .1s;}
+  .reserved.show{opacity:1;}
+  .reserved b{color:var(--forest);}
+  .hairline{height:3px;width:48px;background:var(--lime);border-radius:2px;margin:1.1rem auto 0;opacity:0;transition:opacity .3s ease;}
+  .hairline.show{opacity:1;}
+  .placeholder{color:var(--ink-soft); font-size:1rem;}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--tint);border-top-color:var(--green);animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .error{color:#b3261e; font-size:1rem; line-height:1.5; max-width:18rem;}
+  .error b{display:block; font-weight:700; margin-bottom:.2rem;}
+
+  .actions{margin-top:1.8rem;}
+  button{font-family:var(--sans); cursor:pointer;}
+  .primary{
+    width:100%; padding:1.15rem 1.4rem; border:0; border-radius:16px;
+    background:var(--forest); color:#fff; font-size:1.12rem; font-weight:600; letter-spacing:.01em;
+    transition:transform .12s ease, background .2s ease; box-shadow:0 10px 24px -12px rgba(0,66,56,.6);
+  }
+  .primary:hover{background:#013128;}
+  .primary:active{transform:translateY(1px);}
+  .primary:disabled{background:var(--ink-soft); box-shadow:none; cursor:default; opacity:.7;}
+  .secondary{margin-top:.8rem; width:100%; padding:.85rem; border:1px solid var(--line); border-radius:14px; background:var(--paper); color:var(--forest); font-size:.98rem; font-weight:600;}
+  .secondary:hover{background:var(--tint);}
+  .hidden{display:none !important;}
+  .recent{margin-top:1.7rem; font-size:.82rem; color:var(--ink-soft); min-height:1.1rem;}
+  .recent b{color:var(--ink); font-weight:600;}
+
+  .toast{
+    position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem);
+    background:var(--forest); color:#fff; padding:.7rem 1.2rem; border-radius:999px;
+    font-size:.9rem; font-weight:600; opacity:0; pointer-events:none; transition:all .25s ease;
+    box-shadow:0 12px 30px -10px rgba(0,66,56,.5);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .demo{margin-top:1.4rem; font-size:.72rem;}
+  .demo a{color:var(--ink-soft); text-decoration:underline; cursor:pointer;}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div id="demobar" class="demobar hidden">Demo mode: not connected to the live counter yet. These numbers are practice only.</div>
+    <div class="brand">RDP <span>&middot; Centre of Teaching, Learning &amp; Scholarship</span></div>
+    <h1>Get your number</h1>
+    <p class="sub">Tap the button for the next number. Every one is unique.</p>
+
+    <div class="stage" aria-live="polite">
+      <div id="placeholder" class="placeholder">Your number will appear here.</div>
+      <div id="spinner" class="spinner hidden" role="status" aria-label="Getting your number"></div>
+      <div id="numberWrap" class="hidden">
+        <div id="number" class="number"></div>
+        <div class="hairline" id="hairline"></div>
+        <div id="reserved" class="reserved">This number is <b>yours</b>. No one else can get it.</div>
+      </div>
+      <div id="error" class="error hidden"><b>Couldn't reach the server.</b>No number was given out, so nothing is lost. Please try again.</div>
+    </div>
+
+    <div class="actions">
+      <button id="getBtn" class="primary">Get my number</button>
+      <button id="againBtn" class="secondary hidden">Get another number</button>
+    </div>
+
+    <div id="recent" class="recent"></div>
+    <div id="demoControls" class="demo hidden"><a id="demoToggle">demo: simulate a server error</a></div>
+  </main>
+
+  <div id="toast" class="toast">Copied to clipboard</div>
+
+<script>
+/* =====================================================================
+ *  CONFIGURATION  --  the only thing you need to edit to go live.
+ *  Paste the deployed counter URL between the quotes below.
+ *  While it is empty, the page runs in safe "demo mode" (practice only).
+ * ===================================================================== */
+const ENDPOINT = "";   // e.g. "https://script.google.com/macros/s/AKfy.../exec"
+const START    = 4000; // first number ever handed out (must match the counter)
+
+/* ----------------------------------------------------------------- */
+const DEMO = !ENDPOINT;
+const $ = s => document.querySelector(s);
+const getBtn=$("#getBtn"), againBtn=$("#againBtn"),
+      placeholder=$("#placeholder"), spinner=$("#spinner"),
+      numberWrap=$("#numberWrap"), numberEl=$("#number"),
+      reserved=$("#reserved"), hairline=$("#hairline"),
+      errorEl=$("#error"), recentEl=$("#recent"), toast=$("#toast");
+
+if(DEMO){ $("#demobar").classList.remove("hidden"); $("#demoControls").classList.remove("hidden"); }
+
+async function getNext(){
+  if(DEMO){
+    await new Promise(r=>setTimeout(r,500));
+    if(window.__forceError) throw new Error("demo offline");
+    let n = parseInt(localStorage.getItem("una_demo_next")||START,10);
+    localStorage.setItem("una_demo_next", n+1);
+    return n;
+  }
+  // Live: a "simple" POST (text/plain) so the browser sends no CORS preflight.
+  const res = await fetch(ENDPOINT,{method:"POST",body:"get"});
+  if(!res.ok) throw new Error("bad response "+res.status);
+  const data = await res.json();
+  if(typeof data.number!=="number") throw new Error("unexpected response");
+  return data.number;
+}
+
+function showState(s){
+  placeholder.classList.toggle("hidden", s!=="idle");
+  spinner.classList.toggle("hidden", s!=="loading");
+  numberWrap.classList.toggle("hidden", s!=="result");
+  errorEl.classList.toggle("hidden", s!=="error");
+}
+let toastTimer;
+function showToast(){toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove("show"),1600);}
+async function copy(t){try{await navigator.clipboard.writeText(t);showToast();}catch(e){/* clipboard can be blocked; not critical */}}
+function pushRecent(n){
+  let list=JSON.parse(localStorage.getItem("una_recent")||"[]");
+  list.unshift(n); list=list.slice(0,5);
+  localStorage.setItem("una_recent",JSON.stringify(list)); renderRecent();
+}
+function renderRecent(){
+  const list=JSON.parse(localStorage.getItem("una_recent")||"[]");
+  recentEl.innerHTML=list.length?"Recent on this device: <b>"+list.join("</b>, <b>")+"</b>":"";
+}
+async function handleGet(){
+  getBtn.disabled=true; againBtn.disabled=true; getBtn.textContent="Getting your number...";
+  showState("loading");
+  try{
+    const n=await getNext();
+    numberEl.textContent=n; showState("result");
+    requestAnimationFrame(()=>{numberEl.classList.add("show"); hairline.classList.add("show"); reserved.classList.add("show");});
+    getBtn.classList.add("hidden"); againBtn.classList.remove("hidden");
+    pushRecent(n); copy(String(n));
+  }catch(e){
+    showState("error"); getBtn.classList.remove("hidden"); againBtn.classList.add("hidden");
+  }finally{
+    getBtn.disabled=false; againBtn.disabled=false; getBtn.textContent="Get my number";
+  }
+}
+getBtn.addEventListener("click",handleGet);
+againBtn.addEventListener("click",()=>{
+  numberEl.classList.remove("show"); hairline.classList.remove("show"); reserved.classList.remove("show");
+  handleGet();
+});
+if(DEMO){
+  $("#demoToggle").addEventListener("click",()=>{
+    window.__forceError=!window.__forceError;
+    $("#demoToggle").textContent=window.__forceError?"demo: error mode ON (tap to turn off)":"demo: simulate a server error";
+  });
+}
+renderRecent();
+</script>
+</body>
+</html>
