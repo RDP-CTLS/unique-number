@@ -37,11 +37,11 @@ is what makes it one shared sequence across both teachers and both sites.
 
 ### 1. Put the code on your GitHub
 
-1. Create a new repository on your GitHub account (for example `faculty-number-tool`).
+1. Create a new repository on your GitHub account (for example `unique-number`).
 2. Upload the contents of this `repo/` folder to it.
 3. Repo **Settings -> Pages -> Build and deployment -> Source: Deploy from a branch**,
    branch `main`, folder `/ (root)`. Save.
-4. After a minute your page is live at `https://<your-username>.github.io/faculty-number-tool/`.
+4. After a minute your page is live at `https://<your-username>.github.io/unique-number/`.
    It will show a yellow **"Demo mode"** banner until step 2 is done. That is expected and safe.
 
 ### 2. Deploy the counter (Google Apps Script)
