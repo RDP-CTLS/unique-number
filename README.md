@@ -1,5 +1,5 @@
 # unique-number
 
-https://rdp-ctls.github.io/unique-number/
+counter: https://rdp-ctls.github.io/unique-number/
 
-https://github.com/ajellebeans/unique-number
+full source: https://github.com/ajellebeans/unique-number
